@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\Parser\InvalidYieldError;
 use Amp\Parser\Parser;
 use PHPUnit\Framework\TestCase;
 
@@ -36,5 +37,86 @@ class ParserTest extends TestCase {
         $parser->push("foobarbaz\r\n");
 
         $this->assertSame("foobarbaz\r\n", $value);
+    }
+
+    public function testEndedGeneratorThrows() {
+        $parser = new Parser((function () {
+            if (false) {
+                yield;
+            }
+        })());
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage("The parser is no longer writable");
+
+        $parser->push("test");
+    }
+
+    public function testThrowingGeneratorEndsWhenDirectlyThrowing() {
+        $this->expectException(\RuntimeException::class);
+
+        new Parser((function () {
+            if (false) {
+                yield;
+            }
+
+            throw new \RuntimeException;
+        })());
+    }
+
+    public function testThrowingGeneratorEndsWhenThrowingLater() {
+        $parser = new Parser((function () {
+            yield 3;
+
+            throw new \RuntimeException;
+        })());
+
+        $this->expectException(\RuntimeException::class);
+
+        $parser->push("abc");
+    }
+
+    public function testLengthDelimiterPartialPush() {
+        $ok = false;
+
+        $parser = new Parser((function () use (&$ok) {
+            yield 6;
+            $ok = true;
+        })());
+
+        $parser->push("abc\r\n");
+        $this->assertFalse($ok);
+
+        $parser->push("x");
+        $this->assertTrue($ok);
+    }
+
+    public function testThrowsOnInvalidYield() {
+        $this->expectException(InvalidYieldError::class);
+
+        new Parser((function () {
+            yield true;
+        })());
+    }
+
+    public function testThrowsOnLaterInvalidYield() {
+        $parser = new Parser((function () {
+            yield 3;
+            yield true;
+        })());
+
+        $this->expectException(InvalidYieldError::class);
+
+        $parser->push("abcd");
+    }
+
+    public function testCancelReturnsInternalBuffer() {
+        $parser = new Parser((function () {
+            yield 3;
+        })());
+
+        $parser->push("abcd");
+
+        $this->assertSame("d", $parser->cancel());
     }
 }
