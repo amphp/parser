@@ -1,17 +1,17 @@
-# byte-stream
+# parser
 
-[![Build Status](https://img.shields.io/travis/amphp/byte-stream/master.svg?style=flat-square)](https://travis-ci.org/amphp/byte-stream)
-[![CoverageStatus](https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square)](https://coveralls.io/github/amphp/byte-stream?branch=master)
+[![Build Status](https://img.shields.io/travis/amphp/parser/master.svg?style=flat-square)](https://travis-ci.org/amphp/parser)
+[![CoverageStatus](https://img.shields.io/coveralls/amphp/parser/master.svg?style=flat-square)](https://coveralls.io/github/amphp/parser?branch=master)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
-`amphp/byte-stream` is a stream abstraction to make working with non-blocking I/O simple.
+`amphp/parser` is a streaming generator parser.
 
 ## Installation
 
 This package can be installed as a [Composer](https://getcomposer.org/) dependency.
 
 ```bash
-composer require amphp/byte-stream
+composer require amphp/parser
 ```
 
 ## Requirements
@@ -24,7 +24,7 @@ Documentation is bundled within this repository in the [`./docs`](./docs) direct
 
 ## Versioning
 
-`amphp/byte-stream` follows the [semver](http://semver.org/) semantic versioning specification like all other `amphp` packages.
+`amphp/parser` follows the [semver](http://semver.org/) semantic versioning specification like all other `amphp` packages.
 
 ## Security
 
