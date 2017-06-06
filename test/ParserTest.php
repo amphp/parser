@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\Parser\InvalidYieldError;
+use Amp\Parser\InvalidDelimiterError;
 use Amp\Parser\Parser;
 use PHPUnit\Framework\TestCase;
 
@@ -92,7 +92,7 @@ class ParserTest extends TestCase {
     }
 
     public function testThrowsOnInvalidYield() {
-        $this->expectException(InvalidYieldError::class);
+        $this->expectException(InvalidDelimiterError::class);
 
         new Parser((function () {
             yield true;
@@ -105,7 +105,7 @@ class ParserTest extends TestCase {
             yield true;
         })());
 
-        $this->expectException(InvalidYieldError::class);
+        $this->expectException(InvalidDelimiterError::class);
 
         $parser->push("abcd");
     }

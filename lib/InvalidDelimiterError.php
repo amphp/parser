@@ -2,7 +2,7 @@
 
 namespace Amp\Parser;
 
-class InvalidYieldError extends \Error {
+class InvalidDelimiterError extends \Error {
     /**
      * @param \Generator      $generator
      * @param string          $prefix

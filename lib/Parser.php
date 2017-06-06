@@ -15,7 +15,7 @@ class Parser {
     /**
      * @param \Generator $generator
      *
-     * @throws InvalidYieldError If the generator yields an invalid value.
+     * @throws InvalidDelimiterError If the generator yields an invalid delimiter.
      */
     public function __construct(\Generator $generator) {
         $this->generator = $generator;
@@ -31,10 +31,10 @@ class Parser {
             && (!\is_int($this->delimiter) || $this->delimiter <= 0)
             && (!\is_string($this->delimiter) || !\strlen($this->delimiter))
         ) {
-            throw new InvalidYieldError(
+            throw new InvalidDelimiterError(
                 $generator,
                 \sprintf(
-                    "Unexpected yield; Expected NULL, an int greater than 0, or a non-empty string; %s given",
+                    "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
                     \is_object($this->delimiter) ? \sprintf("instance of %s", \get_class($this->delimiter)) : \gettype($this->delimiter)
                 )
             );
@@ -57,7 +57,7 @@ class Parser {
      *
      * @param string $data Data to append to the internal buffer.
      *
-     * @throws InvalidYieldError If the generator yields an invalid value.
+     * @throws InvalidDelimiterError If the generator yields an invalid delimiter.
      * @throws \Error If parsing has already been cancelled.
      * @throws \Throwable If the generator throws.
      */
@@ -101,10 +101,10 @@ class Parser {
                     && (!\is_int($this->delimiter) || $this->delimiter <= 0)
                     && (!\is_string($this->delimiter) || !\strlen($this->delimiter))
                 ) {
-                    throw new InvalidYieldError(
+                    throw new InvalidDelimiterError(
                         $this->generator,
                         \sprintf(
-                            "Unexpected yield; Expected NULL, an int greater than 0, or a non-empty string; %s given",
+                            "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
                             \is_object($this->delimiter) ? \sprintf("instance of %s", \get_class($this->delimiter)) : \gettype($this->delimiter)
                         )
                     );
