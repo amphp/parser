@@ -16,6 +16,7 @@ class Parser {
      * @param \Generator $generator
      *
      * @throws InvalidDelimiterError If the generator yields an invalid delimiter.
+     * @throws \Throwable If the generator throws.
      */
     public function __construct(\Generator $generator) {
         $this->generator = $generator;
@@ -50,6 +51,14 @@ class Parser {
     final public function cancel(): string {
         $this->generator = null;
         return $this->buffer;
+    }
+
+    /**
+     * @return bool True if the parser can still receive more data to parse, false if it has ended and calling push
+     *     will throw an exception.
+     */
+    final public function isValid(): bool {
+        return $this->generator !== null;
     }
 
     /**
