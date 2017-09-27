@@ -4,9 +4,10 @@ kramdown:
 
 baseurl: "/parser"
 layouts_dir: ".shared/layout"
+includes_dir: ".shared/includes"
 
 exclude: ["Gemfile", "Gemfile.lock", "README.md", "vendor"]
-include: [".shared"]
+safe: true
 
 repository: amphp/parser
 gems:
@@ -19,5 +20,7 @@ defaults:
      type: "pages"
    values:
      layout: "docs"
+     description: "PHP's generators are a great way for building incremental parsers. amphp/parser allows parsers to await certain tokens or lengths."
+     keywords: ["parser", "streaming parser", "async", "generators", "php", "amphp"]
 
-asset_path: "/parser/.shared/asset"
+shared_asset_path: "/parser/asset"
