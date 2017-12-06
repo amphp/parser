@@ -38,5 +38,10 @@
         "psr-4": {
             "Amp\\Parser\\Test\\": "test"
         }
+    },
+    "config": {
+        "platform": {
+            "php": "7.0.0"
+        }
     }
 }
