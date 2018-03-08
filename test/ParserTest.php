@@ -120,7 +120,7 @@ class ParserTest extends TestCase {
         $this->assertSame("d", $parser->cancel());
     }
 
-    public function testIsValidShouldReturnTrue() {
+    public function testIsValidOnValidParser() {
         $parser = new Parser((function () {
             yield 3;
         })());
@@ -133,8 +133,8 @@ class ParserTest extends TestCase {
             yield 3;
         })());
 
-        $parser->push("");
+        $parser->push("12345");
 
-        $this->assertTrue($parser->isValid());
+        $this->assertFalse($parser->isValid());
     }
 }
