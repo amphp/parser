@@ -128,7 +128,7 @@ class ParserTest extends TestCase {
         $this->assertTrue($parser->isValid());
     }
 
-    public function testIsValidShouldReturnFalse() {
+    public function testIsValidOnNonFinishedParser() {
         $parser = new Parser((function () {
             yield 3;
         })());
