@@ -1,10 +1,10 @@
-# parser
+# amphp/parser
 
-[![Build Status](https://img.shields.io/travis/amphp/parser/master.svg?style=flat-square)](https://travis-ci.org/amphp/parser)
-[![CoverageStatus](https://img.shields.io/coveralls/amphp/parser/master.svg?style=flat-square)](https://coveralls.io/github/amphp/parser?branch=master)
+AMPHP is a collection of event-driven libraries for PHP designed with fibers and concurrency in mind.
+`amphp/parser` allows easily building streaming generator parsers.
+
+[![Release](https://img.shields.io/github/release/amphp/parser.svg?style=flat-square)](https://github.com/amphp/parser/releases)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
-
-`amphp/parser` is a streaming generator parser.
 
 ## Installation
 
@@ -18,9 +18,36 @@ composer require amphp/parser
 
 - PHP 7.0+
 
-## Documentation
+## Usage
 
-Documentation is bundled within this repository in the [`./docs`](./docs) directory.
+PHP's generators are a great way for building incremental parsers.
+
+## Example
+
+This simple parser parses a line delimited protocol and prints a message for each line. Instead of printing a message, you could also invoke a data callback.
+
+```php
+$parser = new Parser((function () {
+    while (true) {
+        $line = yield "\r\n";
+
+        if (trim($line) === "") {
+            continue;
+        }
+
+        print "New item: {$line}" . PHP_EOL;
+    }
+})());
+
+for ($i = 0; $i < 100; $i++) {
+    $parser->push("bar\r");
+    $parser->push("\nfoo");
+}
+```
+
+## Yield Behavior
+
+You can either `yield` a `string` that's used as delimiter, an `integer` that's used as length, or `null` for consuming everything that's available.
 
 ## Versioning
 
