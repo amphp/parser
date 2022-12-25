@@ -4,11 +4,11 @@ namespace Amp\Parser;
 
 class Parser
 {
-    /** @var \Generator<array-key, int|string|null, mixed, string>|null */
+    /** @var \Generator<array-key, int|string|null, string, void>|null */
     private ?\Generator $generator;
 
     /** @var list<string> */
-    private array $buffer = [];
+    private array $buffers = [];
 
     private int $bufferLength = 0;
 
@@ -16,7 +16,7 @@ class Parser
     private $delimiter;
 
     /**
-     * @param \Generator<array-key, int|string|null, mixed, string> $generator
+     * @param \Generator<array-key, int|string|null, string, void> $generator
      *
      * @throws InvalidDelimiterError If the generator yields an invalid delimiter.
      * @throws \Throwable If the generator throws.
@@ -37,9 +37,9 @@ class Parser
      */
     final public function cancel(): string
     {
-        $buffer = \implode($this->buffer);
+        $buffer = \implode($this->buffers);
 
-        $this->buffer = [];
+        $this->buffers = [];
         $this->generator = null;
 
         return $buffer;
@@ -74,7 +74,6 @@ class Parser
             return;
         }
 
-        $this->buffer[] = $data;
         $this->bufferLength += $length;
 
         try {
@@ -83,13 +82,16 @@ class Parser
                     return;
                 }
 
-                $buffer = \implode($this->buffer);
+                if (!empty($this->buffers)) {
+                    $this->buffers[] = $data;
+                    $data = \implode($this->buffers);
+                    $this->buffers = [];
+                }
 
                 if (\is_int($this->delimiter)) {
                     $cutAt = $retainFrom = $this->delimiter;
                 } elseif (\is_string($this->delimiter)) {
-                    if (($cutAt = \strpos($buffer, $this->delimiter)) === false) {
-                        $this->buffer = [$buffer];
+                    if (($cutAt = \strpos($data, $this->delimiter)) === false) {
                         return;
                     }
 
@@ -99,31 +101,40 @@ class Parser
                 }
 
                 if ($this->bufferLength > $cutAt) {
-                    $this->buffer = $retainFrom < $this->bufferLength ? [\substr($buffer, $retainFrom)] : [];
-                    $buffer = \substr($buffer, 0, $cutAt);
+                    $send = \substr($data, 0, $cutAt);
+                    $data = \substr($data, $retainFrom);
                 } else {
-                    $this->buffer = [];
+                    $send = $data;
+                    $data = '';
                 }
 
                 $this->bufferLength -= $retainFrom;
-                $this->delimiter = $this->filterDelimiter($this->generator->send($buffer));
+
+                $this->delimiter = $this->filterDelimiter($this->generator->send($send));
 
                 if (!$this->generator->valid()) {
                     $this->generator = null;
                     return;
                 }
-            } while (!empty($this->buffer));
+            } while ($this->bufferLength);
         } catch (\Throwable $exception) {
             $this->generator = null;
             throw $exception;
+        } finally {
+            if (\strlen($data)) {
+                $this->buffers[] = $data;
+            }
         }
     }
 
     /**
+     * @param int|string|null $delimiter
      * @return int|string|null
      */
     private function filterDelimiter($delimiter)
     {
+        \assert($this->generator instanceof \Generator, "Invalid parser state");
+
         if ($delimiter !== null
             && (!\is_int($delimiter) || $delimiter <= 0)
             && (!\is_string($delimiter) || !\strlen($delimiter))

@@ -16,7 +16,7 @@ class ParserTest extends TestCase
 
         $parser->push("foobarfoo\r\n");
 
-        $this->assertSame("foobar", $value);
+        self::assertSame("foobar", $value);
     }
 
     public function testStringDelimiter(): void
@@ -28,8 +28,8 @@ class ParserTest extends TestCase
 
         $parser->push("foobarbaz\r\n");
 
-        $this->assertSame("foo", $value1);
-        $this->assertSame("baz", $value2);
+        self::assertSame("foo", $value1);
+        self::assertSame("baz", $value2);
     }
 
     public function testUndelimited(): void
@@ -40,7 +40,7 @@ class ParserTest extends TestCase
 
         $parser->push("foobarbaz\r\n");
 
-        $this->assertSame("foobarbaz\r\n", $value);
+        self::assertSame("foobarbaz\r\n", $value);
     }
 
     public function testEndedGeneratorThrows(): void
@@ -87,16 +87,36 @@ class ParserTest extends TestCase
     {
         $ok = false;
 
-        $parser = new Parser((function () use (&$ok): \Generator {
-            yield 6;
+        $parser = new Parser((function () use (&$value, &$ok): \Generator {
+            $value = yield 6;
             $ok = true;
         })());
 
         $parser->push("abc\r\n");
-        $this->assertFalse($ok);
+        self::assertFalse($ok);
 
         $parser->push("x");
-        $this->assertTrue($ok);
+        self::assertSame("abc\r\nx", $value);
+        self::assertTrue($ok);
+    }
+
+    public function testStringDelimiterPartialPush(): void
+    {
+        $ok = false;
+
+        $parser = new Parser((function () use (&$value1, &$value2, &$ok): \Generator {
+            $value1 = yield "\r\n";
+            $value2 = yield "\r\n";
+            $ok = true;
+        })());
+
+        $parser->push("abc\r");
+        self::assertFalse($ok);
+
+        $parser->push("\nx\r\n");
+        self::assertSame("abc", $value1);
+        self::assertSame("x", $value2);
+        self::assertTrue($ok);
     }
 
     public function testThrowsOnInvalidYield(): void
@@ -128,7 +148,7 @@ class ParserTest extends TestCase
 
         $parser->push("abcd");
 
-        $this->assertSame("d", $parser->cancel());
+        self::assertSame("d", $parser->cancel());
     }
 
     public function testIsValidOnNonFinishedParser(): void
@@ -137,7 +157,7 @@ class ParserTest extends TestCase
             yield 3;
         })());
 
-        $this->assertTrue($parser->isValid());
+        self::assertTrue($parser->isValid());
     }
 
     public function testIsValidOnFinishedParser(): void
@@ -148,6 +168,6 @@ class ParserTest extends TestCase
 
         $parser->push("12345");
 
-        $this->assertFalse($parser->isValid());
+        self::assertFalse($parser->isValid());
     }
 }
