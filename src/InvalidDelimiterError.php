@@ -2,13 +2,10 @@
 
 namespace Amp\Parser;
 
-class InvalidDelimiterError extends \Error {
-    /**
-     * @param \Generator      $generator
-     * @param string          $prefix
-     * @param \Throwable|null $previous
-     */
-    public function __construct(\Generator $generator, string $prefix, \Throwable $previous = null) {
+class InvalidDelimiterError extends \Error
+{
+    public function __construct(\Generator $generator, string $prefix, \Throwable $previous = null)
+    {
         $yielded = $generator->current();
         $prefix .= \sprintf(
             "; %s yielded at key %s",

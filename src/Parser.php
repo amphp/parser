@@ -2,43 +2,33 @@
 
 namespace Amp\Parser;
 
-class Parser {
-    /** @var \Generator */
+class Parser
+{
+    /** @var \Generator<array-key, int|string|null, mixed, string>|null */
     private $generator;
 
-    /** @var string */
-    private $buffer = '';
+    /** @var list<string> */
+    private $buffer = [];
+
+    /** @var int */
+    private $bufferLength = 0;
 
     /** @var int|string|null */
     private $delimiter;
 
     /**
-     * @param \Generator $generator
+     * @param \Generator<array-key, int|string|null, mixed, string> $generator
      *
      * @throws InvalidDelimiterError If the generator yields an invalid delimiter.
      * @throws \Throwable If the generator throws.
      */
-    public function __construct(\Generator $generator) {
+    public function __construct(\Generator $generator)
+    {
         $this->generator = $generator;
-
-        $this->delimiter = $this->generator->current();
+        $this->delimiter = $this->filterDelimiter($this->generator->current());
 
         if (!$this->generator->valid()) {
             $this->generator = null;
-            return;
-        }
-
-        if ($this->delimiter !== null
-            && (!\is_int($this->delimiter) || $this->delimiter <= 0)
-            && (!\is_string($this->delimiter) || !\strlen($this->delimiter))
-        ) {
-            throw new InvalidDelimiterError(
-                $generator,
-                \sprintf(
-                    "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
-                    \is_object($this->delimiter) ? \sprintf("instance of %s", \get_class($this->delimiter)) : \gettype($this->delimiter)
-                )
-            );
         }
     }
 
@@ -48,16 +38,22 @@ class Parser {
      *
      * @return string
      */
-    final public function cancel(): string {
+    final public function cancel(): string
+    {
+        $buffer = \implode($this->buffer);
+
+        $this->buffer = [];
         $this->generator = null;
-        return $this->buffer;
+
+        return $buffer;
     }
 
     /**
      * @return bool True if the parser can still receive more data to parse, false if it has ended and calling push
      *     will throw an exception.
      */
-    final public function isValid(): bool {
+    final public function isValid(): bool
+    {
         return $this->generator !== null;
     }
 
@@ -70,62 +66,81 @@ class Parser {
      * @throws \Error If parsing has already been cancelled.
      * @throws \Throwable If the generator throws.
      */
-    final public function push(string $data) {
+    final public function push(string $data): void
+    {
         if ($this->generator === null) {
             throw new \Error("The parser is no longer writable");
         }
 
-        $this->buffer .= $data;
-        $end = false;
+        $length = \strlen($data);
+        if ($length === 0) {
+            return;
+        }
+
+        $this->buffer[] = $data;
+        $this->bufferLength += $length;
 
         try {
-            while ($this->buffer !== "") {
-                if (\is_int($this->delimiter)) {
-                    if (\strlen($this->buffer) < $this->delimiter) {
-                        break; // Too few bytes in buffer.
-                    }
-
-                    $send = \substr($this->buffer, 0, $this->delimiter);
-                    $this->buffer = \substr($this->buffer, $this->delimiter);
-                } elseif (\is_string($this->delimiter)) {
-                    if (($position = \strpos($this->buffer, $this->delimiter)) === false) {
-                        break;
-                    }
-
-                    $send = \substr($this->buffer, 0, $position);
-                    $this->buffer = \substr($this->buffer, $position + \strlen($this->delimiter));
-                } else {
-                    $send = $this->buffer;
-                    $this->buffer = "";
+            do {
+                if (\is_int($this->delimiter) && $this->bufferLength < $this->delimiter) {
+                    return;
                 }
 
-                $this->delimiter = $this->generator->send($send);
+                $buffer = \implode($this->buffer);
+
+                if (\is_int($this->delimiter)) {
+                    $cutAt = $retainFrom = $this->delimiter;
+                } elseif (\is_string($this->delimiter)) {
+                    if (($cutAt = \strpos($buffer, $this->delimiter)) === false) {
+                        $this->buffer = [$buffer];
+                        return;
+                    }
+
+                    $retainFrom = $cutAt + \strlen($this->delimiter);
+                } else {
+                    $cutAt = $retainFrom = $this->bufferLength;
+                }
+
+                if ($this->bufferLength > $cutAt) {
+                    $this->buffer = $retainFrom < $this->bufferLength ? [\substr($buffer, $retainFrom)] : [];
+                    $buffer = \substr($buffer, 0, $cutAt);
+                } else {
+                    $this->buffer = [];
+                }
+
+                $this->bufferLength -= $retainFrom;
+                $this->delimiter = $this->filterDelimiter($this->generator->send($buffer));
 
                 if (!$this->generator->valid()) {
-                    $end = true;
-                    break;
+                    $this->generator = null;
+                    return;
                 }
-
-                if ($this->delimiter !== null
-                    && (!\is_int($this->delimiter) || $this->delimiter <= 0)
-                    && (!\is_string($this->delimiter) || !\strlen($this->delimiter))
-                ) {
-                    throw new InvalidDelimiterError(
-                        $this->generator,
-                        \sprintf(
-                            "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
-                            \is_object($this->delimiter) ? \sprintf("instance of %s", \get_class($this->delimiter)) : \gettype($this->delimiter)
-                        )
-                    );
-                }
-            }
+            } while (!empty($this->buffer));
         } catch (\Throwable $exception) {
-            $end = true;
+            $this->generator = null;
             throw $exception;
-        } finally {
-            if ($end) {
-                $this->generator = null;
-            }
         }
+    }
+
+    /**
+     * @param mixed $delimiter
+     * @return int|string|null
+     */
+    private function filterDelimiter($delimiter)
+    {
+        if ($delimiter !== null
+            && (!\is_int($delimiter) || $delimiter <= 0)
+            && (!\is_string($delimiter) || !\strlen($delimiter))
+        ) {
+            throw new InvalidDelimiterError(
+                $this->generator,
+                \sprintf(
+                    "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
+                    \get_debug_type($delimiter)
+                )
+            );
+        }
+
+        return $delimiter;
     }
 }

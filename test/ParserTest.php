@@ -1,13 +1,15 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\Parser\Test;
 
 use Amp\Parser\InvalidDelimiterError;
 use Amp\Parser\Parser;
 use PHPUnit\Framework\TestCase;
 
-class ParserTest extends TestCase {
-    public function testIntDelimiter() {
+class ParserTest extends TestCase
+{
+    public function testIntDelimiter(): void
+    {
         $parser = new Parser((function () use (&$value) {
             $value = yield 6;
         })());
@@ -17,8 +19,9 @@ class ParserTest extends TestCase {
         $this->assertSame("foobar", $value);
     }
 
-    public function testStringDelimiter() {
-        $parser = new Parser((function () use (&$value1, &$value2) {
+    public function testStringDelimiter(): void
+    {
+        $parser = new Parser((function () use (&$value1, &$value2): \Generator {
             $value1 = yield "bar";
             $value2 = yield "\r\n";
         })());
@@ -29,8 +32,9 @@ class ParserTest extends TestCase {
         $this->assertSame("baz", $value2);
     }
 
-    public function testUndelimited() {
-        $parser = new Parser((function () use (&$value) {
+    public function testUndelimited(): void
+    {
+        $parser = new Parser((function () use (&$value): \Generator {
             $value = yield;
         })());
 
@@ -39,8 +43,9 @@ class ParserTest extends TestCase {
         $this->assertSame("foobarbaz\r\n", $value);
     }
 
-    public function testEndedGeneratorThrows() {
-        $parser = new Parser((function () {
+    public function testEndedGeneratorThrows(): void
+    {
+        $parser = new Parser((function (): \Generator {
             if (false) {
                 yield;
             }
@@ -52,10 +57,11 @@ class ParserTest extends TestCase {
         $parser->push("test");
     }
 
-    public function testThrowingGeneratorEndsWhenDirectlyThrowing() {
+    public function testThrowingGeneratorEndsWhenDirectlyThrowing(): void
+    {
         $this->expectException(\RuntimeException::class);
 
-        new Parser((function () {
+        new Parser((function (): \Generator {
             if (false) {
                 yield;
             }
@@ -64,8 +70,9 @@ class ParserTest extends TestCase {
         })());
     }
 
-    public function testThrowingGeneratorEndsWhenThrowingLater() {
-        $parser = new Parser((function () {
+    public function testThrowingGeneratorEndsWhenThrowingLater(): void
+    {
+        $parser = new Parser((function (): \Generator {
             yield 3;
 
             throw new \RuntimeException;
@@ -76,10 +83,11 @@ class ParserTest extends TestCase {
         $parser->push("abc");
     }
 
-    public function testLengthDelimiterPartialPush() {
+    public function testLengthDelimiterPartialPush(): void
+    {
         $ok = false;
 
-        $parser = new Parser((function () use (&$ok) {
+        $parser = new Parser((function () use (&$ok): \Generator {
             yield 6;
             $ok = true;
         })());
@@ -91,16 +99,18 @@ class ParserTest extends TestCase {
         $this->assertTrue($ok);
     }
 
-    public function testThrowsOnInvalidYield() {
+    public function testThrowsOnInvalidYield(): void
+    {
         $this->expectException(InvalidDelimiterError::class);
 
-        new Parser((function () {
+        new Parser((function (): \Generator {
             yield true;
         })());
     }
 
-    public function testThrowsOnLaterInvalidYield() {
-        $parser = new Parser((function () {
+    public function testThrowsOnLaterInvalidYield()
+    {
+        $parser = new Parser((function (): \Generator {
             yield 3;
             yield true;
         })());
@@ -110,8 +120,9 @@ class ParserTest extends TestCase {
         $parser->push("abcd");
     }
 
-    public function testCancelReturnsInternalBuffer() {
-        $parser = new Parser((function () {
+    public function testCancelReturnsInternalBuffer(): void
+    {
+        $parser = new Parser((function (): \Generator {
             yield 3;
         })());
 
@@ -120,16 +131,18 @@ class ParserTest extends TestCase {
         $this->assertSame("d", $parser->cancel());
     }
 
-    public function testIsValidOnNonFinishedParser() {
-        $parser = new Parser((function () {
+    public function testIsValidOnNonFinishedParser(): void
+    {
+        $parser = new Parser((function (): \Generator {
             yield 3;
         })());
 
         $this->assertTrue($parser->isValid());
     }
 
-    public function testIsValidOnFinishedParser() {
-        $parser = new Parser((function () {
+    public function testIsValidOnFinishedParser(): void
+    {
+        $parser = new Parser((function (): \Generator {
             yield 3;
         })());
 
