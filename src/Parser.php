@@ -128,7 +128,7 @@ class Parser
     }
 
     /**
-     * @param int|string|null $delimiter
+     * @param mixed $delimiter Value yielded from Generator.
      * @return int|string|null
      */
     private function filterDelimiter($delimiter)
@@ -143,7 +143,7 @@ class Parser
                 $this->generator,
                 \sprintf(
                     "Invalid value yielded: Expected NULL, an int greater than 0, or a non-empty string; %s given",
-                    \get_debug_type($delimiter)
+                    \is_object($delimiter) ? \sprintf("instance of %s", \get_class($delimiter)) : \gettype($delimiter),
                 )
             );
         }
