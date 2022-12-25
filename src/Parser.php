@@ -5,13 +5,13 @@ namespace Amp\Parser;
 class Parser
 {
     /** @var \Generator<array-key, int|string|null, mixed, string>|null */
-    private $generator;
+    private ?\Generator $generator;
 
     /** @var list<string> */
-    private $buffer = [];
+    private array $buffer = [];
 
     /** @var int */
-    private $bufferLength = 0;
+    private int $bufferLength = 0;
 
     /** @var int|string|null */
     private $delimiter;

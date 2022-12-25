@@ -10,18 +10,6 @@ jobs:
       matrix:
         include:
           - operating-system: 'ubuntu-latest'
-            php-version: '7.0'
-
-          - operating-system: 'ubuntu-latest'
-            php-version: '7.1'
-
-          - operating-system: 'ubuntu-latest'
-            php-version: '7.2'
-
-          - operating-system: 'ubuntu-latest'
-            php-version: '7.3'
-
-          - operating-system: 'ubuntu-latest'
             php-version: '7.4'
 
           - operating-system: 'ubuntu-latest'
