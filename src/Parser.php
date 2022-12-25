@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Amp\Parser;
 
@@ -10,7 +10,6 @@ class Parser
     /** @var list<string> */
     private array $buffer = [];
 
-    /** @var int */
     private int $bufferLength = 0;
 
     /** @var int|string|null */
@@ -35,8 +34,6 @@ class Parser
     /**
      * Cancels the generator parser and returns any remaining data in the internal buffer. Writing data after calling
      * this method will result in an error.
-     *
-     * @return string
      */
     final public function cancel(): string
     {
@@ -123,7 +120,6 @@ class Parser
     }
 
     /**
-     * @param mixed $delimiter
      * @return int|string|null
      */
     private function filterDelimiter($delimiter)
