@@ -4,7 +4,7 @@ namespace Amp\Parser;
 
 class InvalidDelimiterError extends \Error
 {
-    public function __construct(\Generator $generator, string $prefix, \Throwable $previous = null)
+    public function __construct(\Generator $generator, string $prefix, ?\Throwable $previous = null)
     {
         $yielded = $generator->current();
         $prefix .= \sprintf(
